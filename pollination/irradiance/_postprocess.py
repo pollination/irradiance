@@ -3,6 +3,7 @@ from pollination_dsl.dag import Inputs, GroupedDAG, task, Outputs
 from pollination.honeybee_radiance.grid import MergeFolderData
 from pollination.honeybee_radiance.post_process import AnnualIrradianceMetrics
 from pollination.path.copy import CopyFile, CopyFileMultiple
+from pollination.honeybee_display.translate import ModelToVis
 
 # input/output alias
 from pollination.alias.inputs.wea import wea_input
@@ -13,6 +14,11 @@ class AnnualIrradiancePostprocess(GroupedDAG):
     """Post-process for annual irradiance."""
 
     # inputs
+    model = Inputs.file(
+        description='Input Honeybee model.',
+        extensions=['json', 'hbjson', 'pkl', 'hbpkl', 'zip']
+    )
+
     input_folder = Inputs.folder(
         description='Folder with DGP results before redistributing the '
         'results to the original grids.'
@@ -121,10 +127,26 @@ class AnnualIrradiancePostprocess(GroupedDAG):
             }
         ]
 
+    @task(template=ModelToVis, needs=[calculate_metrics])
+    def create_vsf(
+        self, model=model, grid_data='metrics', output_format='vsf'
+    ):
+        return [
+            {
+                'from': ModelToVis()._outputs.output_file,
+                'to': 'visualization.vsf'
+            }
+        ]
+
     results = Outputs.folder(
         source='results', description='results folder.'
     )
 
     metrics = Outputs.folder(
         source='metrics', description='metrics folder.'
+    )
+
+    visualization = Outputs.file(
+        source='visualization.vsf',
+        description='Annual Irradiance result visualization in VisualizationSet format.'
     )
