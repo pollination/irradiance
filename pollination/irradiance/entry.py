@@ -13,6 +13,7 @@ from pollination.alias.inputs.grid import grid_filter_input, \
 from pollination.alias.outputs.daylight import annual_daylight_results
 
 from ._prepare_folder import SkyIrradiancePrepareFolder
+from ._raytracing import SkyIrradianceRayTracing
 
 
 @dataclass
@@ -141,7 +142,7 @@ class SkyIrradianceEntryPoint(DAG):
         ]
 
     @task(
-        template=DaylightCoefficient,
+        template=SkyIrradianceRayTracing,
         needs=[prepare_folder_sky_irradiance],
         loop=prepare_folder_sky_irradiance._outputs.sensor_grids,
         sub_folder='initial_results/{{item.full_id}}',  # create a subfolder for each grid
@@ -161,23 +162,16 @@ class SkyIrradianceEntryPoint(DAG):
         sky_matrix=prepare_folder_sky_irradiance._outputs.resources,
         sensor_grid=prepare_folder_sky_irradiance._outputs.resources,
         sensor_count='{{item.count}}',
-        conversion='0.265 0.670 0.065',
-        output_format='a',
         order_by=order_by
     ):
-        return [
-            {
-                'from': DaylightCoefficient()._outputs.result_file,
-                'to': '../{{self.name}}.ill'
-            }
-        ]
+        pass
 
     @task(
         template=MergeFolderData,
         needs=[sky_irradiance_raytracing]
     )
     def restructure_results(
-        self, input_folder='initial_results', extension='ill'
+        self, input_folder='initial_results/final', extension='ill'
     ):
         return [
             {

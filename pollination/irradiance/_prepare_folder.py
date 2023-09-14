@@ -170,7 +170,7 @@ class SkyIrradiancePrepareFolder(GroupedDAG):
             },
             {
                 'from': SplitGridFolder()._outputs.dist_info,
-                'to': 'initial_results/_redist_info.json'
+                'to': 'initial_results/final/_redist_info.json'
             }
         ]
 
