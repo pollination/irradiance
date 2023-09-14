@@ -154,6 +154,7 @@ class SkyIrradianceEntryPoint(DAG):
     )
     def sky_irradiance_raytracing(
         self,
+        name='{{item.full_id}}',
         radiance_parameters=radiance_parameters,
         scene_file=prepare_folder_sky_irradiance._outputs.resources,
         sky_dome=prepare_folder_sky_irradiance._outputs.resources,
@@ -167,7 +168,7 @@ class SkyIrradianceEntryPoint(DAG):
         return [
             {
                 'from': DaylightCoefficient()._outputs.result_file,
-                'to': '../{{item.full_id}}.ill'
+                'to': '../{{self.name}}.ill'
             }
         ]
 
