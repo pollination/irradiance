@@ -1,3 +1,4 @@
+"""Prepare folder DAG."""
 from dataclasses import dataclass
 from pollination_dsl.dag import Inputs, GroupedDAG, task, Outputs
 from pollination.honeybee_radiance.sun import CreateSunMtx, ParseSunUpHours
@@ -7,7 +8,6 @@ from pollination.honeybee_radiance.sky import CreateSkyDome, CreateSkyMatrix
 from pollination.honeybee_radiance.grid import SplitGridFolder
 from pollination.path.copy import CopyFile
 
-# input/output alias
 # input/output alias
 from pollination.alias.inputs.model import hbjson_model_grid_input
 from pollination.alias.inputs.wea import wea_input
@@ -83,9 +83,7 @@ class AnnualIrradiancePrepareFolder(GroupedDAG):
     )
 
     wea = Inputs.file(
-        description='Wea file.',
-        extensions=['wea'],
-        alias=wea_input
+        description='Wea file.', extensions=['wea'], alias=wea_input
     )
 
     @task(template=CreateSunMtx)

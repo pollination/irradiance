@@ -41,11 +41,12 @@ def _clean_version():
 
     return {'local_scheme': get_version, 'version_scheme': empty}
 
+
 # normal setuptool inputs
 setuptools.setup(
     name=name,                                                              # will be used for package name
-    author='ladybug-tools',                                                 # the owner account for this package - required if pushed to Pollination
-    author_email='info@ladybug.tools',
+    author='pollination',                                                 # the owner account for this package - required if pushed to Pollination
+    author_email='info@pollination.solutions',
     packages=setuptools.find_namespace_packages(                            # required - that's how pollination find the package
         include=['pollination.*'], exclude=['tests', '.github']
     ),

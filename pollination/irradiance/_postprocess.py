@@ -14,7 +14,7 @@ class AnnualIrradiancePostprocess(GroupedDAG):
 
     # inputs
     input_folder = Inputs.folder(
-        description='Folder with DGP results before redistributing the '
+        description='Folder with initial results before redistributing the '
         'results to the original grids.'
     )
 
@@ -33,9 +33,7 @@ class AnnualIrradiancePostprocess(GroupedDAG):
     )
 
     wea = Inputs.file(
-        description='Wea file.',
-        extensions=['wea'],
-        alias=wea_input
+        description='Wea file.', extensions=['wea'], alias=wea_input
     )
 
     @task(template=CopyFileMultiple)
