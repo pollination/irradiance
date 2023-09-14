@@ -1,5 +1,4 @@
 """Ray tracing DAG for annual irradiance."""
-
 from pollination_dsl.dag import Inputs, DAG, task
 from dataclasses import dataclass
 
@@ -97,7 +96,8 @@ class AnnualIrradianceRayTracing(DAG):
         radiance_parameters=radiance_parameters,
         fixed_radiance_parameters='-aa 0.0 -I -ab 1 -c 1 -faf',
         sensor_count=sensor_count,
-        sky_matrix=sky_matrix_direct, sky_dome=sky_dome,
+        sky_matrix=sky_matrix_direct,
+        sky_dome=sky_dome,
         sensor_grid=sensor_grid,
         conversion='0.265 0.670 0.065',  # divide by 179
         scene_file=octree_file,
@@ -116,7 +116,8 @@ class AnnualIrradianceRayTracing(DAG):
         radiance_parameters=radiance_parameters,
         fixed_radiance_parameters='-aa 0.0 -I -c 1 -faf',
         sensor_count=sensor_count,
-        sky_matrix=sky_matrix, sky_dome=sky_dome,
+        sky_matrix=sky_matrix,
+        sky_dome=sky_dome,
         sensor_grid=sensor_grid,
         conversion='0.265 0.670 0.065',  # divide by 179
         scene_file=octree_file,
