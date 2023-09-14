@@ -133,7 +133,7 @@ jobs:
           TAG=$(echo "${TAG:?}" | sed 's/[[:space:]]//g')
           echo $TAG
           queenbee
-          pollination dsl push pollination-annual-daylight --tag $TAG -e https://api.pollination.cloud -src https://api.pollination.cloud/registries --push-dependencies
+          pollination dsl push pollination-irradiance --tag $TAG -e https://api.pollination.cloud -src https://api.pollination.cloud/registries --push-dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           QB_POLLINATION_TOKEN: ${{ secrets.POLLINATION_LADYBUGBOT_TOKEN }}
