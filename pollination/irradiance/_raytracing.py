@@ -10,7 +10,6 @@ from pollination.path.copy import CopyFile
 @dataclass
 class AnnualIrradianceRayTracing(DAG):
     # inputs
-
     radiance_parameters = Inputs.str(
         description='The radiance parameters for ray tracing',
         default='-ab 2'
