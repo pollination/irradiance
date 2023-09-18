@@ -6,7 +6,6 @@ from pollination.honeybee_radiance.grid import SplitGridFolder
 from pollination.honeybee_radiance.octree import CreateOctree
 from pollination.honeybee_radiance.sky import CreateSkyDome, CreateSkyMatrix
 from pollination.honeybee_radiance.sun import CreateSunMatrix, ParseSunUpHours
-from pollination.path.copy import Copy
 
 # input/output alias
 from pollination.alias.inputs.model import hbjson_model_grid_input

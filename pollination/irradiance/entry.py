@@ -1,7 +1,6 @@
 from pollination_dsl.dag import Inputs, DAG, task, Outputs
 from dataclasses import dataclass
 from pollination.honeybee_radiance.grid import MergeFolderData
-from pollination.honeybee_radiance.coefficient import DaylightCoefficient
 
 # input/output alias
 from pollination.alias.inputs.model import hbjson_model_grid_input
