@@ -1,4 +1,4 @@
-# Annual Irradiance
+# Irradiance
 
 Calculate solar irradiance (W/m2) and radiation (kWh/m2) at each time step provided by a wea file.
 
