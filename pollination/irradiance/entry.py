@@ -164,6 +164,7 @@ class AnnualIrradianceEntryPoint(DAG):
         self, input_folder=prepare_folder_annual_irradiance._outputs.initial_results,
         grids_info=prepare_folder_annual_irradiance._outputs.resources,
         sun_up_hours=prepare_folder_annual_irradiance._outputs.resources,
+        timestep=timestep,
         wea=wea,
     ):
         return [
