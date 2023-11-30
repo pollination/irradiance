@@ -83,7 +83,7 @@ class AnnualIrradiancePrepareFolder(GroupedDAG):
     )
 
     wea = Inputs.file(
-        description='Wea file.', extensions=['wea'], alias=wea_input
+        description='Wea file.', extensions=['wea', 'epw'], alias=wea_input
     )
 
     @task(template=CreateSunMtx)
