@@ -6,7 +6,9 @@ from pollination.honeybee_radiance.translate import CreateRadianceFolderGrid
 from pollination.honeybee_radiance.octree import CreateOctree, CreateOctreeWithSky
 from pollination.honeybee_radiance.sky import CreateSkyDome, CreateSkyMatrix
 from pollination.honeybee_radiance.grid import SplitGridFolder
+from pollination.path.write import WriteInt
 from pollination.path.copy import CopyFile
+from pollination.honeybee_radiance.study import StudyInfo
 
 # input/output alias
 from pollination.alias.inputs.model import hbjson_model_grid_input
@@ -110,7 +112,7 @@ class AnnualIrradiancePrepareFolder(GroupedDAG):
             },
             {
                 'from': CreateRadianceFolderGrid()._outputs.sensor_grids_file,
-                'to': 'resources/grids_info.json'
+                'to': 'results/grids_info.json'
             }
         ]
 
@@ -140,16 +142,7 @@ class AnnualIrradiancePrepareFolder(GroupedDAG):
             },
             {
                 'from': SplitGridFolder()._outputs.dist_info,
-                'to': 'initial_results/final/total/_redist_info.json'
-            }
-        ]
-
-    @task(template=CopyFile, needs=[split_grid_folder])
-    def copy_redist_info(self, src=split_grid_folder._outputs.dist_info):
-        return [
-            {
-                'from': CopyFile()._outputs.dst,
-                'to': 'initial_results/final/direct/_redist_info.json'
+                'to': 'resources/_redist_info.json'
             }
         ]
 
@@ -207,7 +200,16 @@ class AnnualIrradiancePrepareFolder(GroupedDAG):
         return [
             {
                 'from': ParseSunUpHours()._outputs.sun_up_hours,
-                'to': 'resources/sun-up-hours.txt'
+                'to': 'results/sun-up-hours.txt'
+            }
+        ]
+
+    @task(template=StudyInfo)
+    def create_study_info(self, wea=wea, timestep=timestep):
+        return [
+            {
+                'from': StudyInfo()._outputs.study_info,
+                'to': 'results/study_info.json'
             }
         ]
 
@@ -219,8 +221,8 @@ class AnnualIrradiancePrepareFolder(GroupedDAG):
         source='resources', description='resources folder.'
     )
 
-    initial_results = Outputs.folder(
-        source='initial_results', description='initial results folder.'
-    )
-
     sensor_grids = Outputs.list(source='resources/grid/_info.json')
+
+    results = Outputs.folder(
+        source='results', description='results folder.'
+    )
