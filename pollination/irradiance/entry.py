@@ -1,5 +1,6 @@
 from pollination_dsl.dag import Inputs, DAG, task, Outputs
 from dataclasses import dataclass
+from pollination.honeybee_radiance_postprocess.grid import MergeFolderData
 
 # input/output alias
 from pollination.alias.inputs.model import hbjson_model_grid_input
@@ -9,9 +10,8 @@ from pollination.alias.inputs.radiancepar import rad_par_annual_input
 from pollination.alias.inputs.grid import grid_filter_input, \
     min_sensor_count_input, cpu_count
 from pollination.alias.inputs.bool_options import visible_vs_solar_input
-from pollination.alias.outputs.daylight import total_radiation_results, \
-    direct_radiation_results, average_irradiance_results, peak_irradiance_results, \
-    cumulative_radiation_results
+from pollination.alias.outputs.daylight import average_irradiance_results, \
+    peak_irradiance_results, cumulative_radiation_results
 
 from ._prepare_folder import AnnualIrradiancePrepareFolder
 from ._raytracing import AnnualIrradianceRayTracing
@@ -109,8 +109,8 @@ class AnnualIrradianceEntryPoint(DAG):
                 'to': 'resources'
             },
             {
-                'from': AnnualIrradiancePrepareFolder()._outputs.initial_results,
-                'to': 'initial_results'
+                'from': AnnualIrradiancePrepareFolder()._outputs.results,
+                'to': 'results'
             },
             {
                 'from': AnnualIrradiancePrepareFolder()._outputs.sensor_grids
@@ -153,25 +153,51 @@ class AnnualIrradianceEntryPoint(DAG):
         pass
 
     @task(
-        template=AnnualIrradiancePostprocess,
+        template=MergeFolderData,
         needs=[prepare_folder_annual_irradiance, annual_irradiance_raytracing],
         sub_paths={
-            'grids_info': 'grids_info.json',
-            'sun_up_hours': 'sun-up-hours.txt'
-            }
+            'dist_info': '_redist_info.json'
+        }
     )
-    def postprocess_annual_irradiance(
-        self, input_folder=prepare_folder_annual_irradiance._outputs.initial_results,
-        grids_info=prepare_folder_annual_irradiance._outputs.resources,
-        sun_up_hours=prepare_folder_annual_irradiance._outputs.resources,
-        timestep=timestep,
-        wea=wea,
+    def restructure_total_results(
+        self, input_folder='initial_results/final/total',
+        extension='ill',
+        dist_info=prepare_folder_annual_irradiance._outputs.resources
     ):
         return [
             {
-                'from': AnnualIrradiancePostprocess()._outputs.results,
-                'to': 'results'
-            },
+                'from': MergeFolderData()._outputs.output_folder,
+                'to': 'results/__static_apertures__/default/total'
+            }
+        ]
+
+    @task(
+        template=MergeFolderData,
+        needs=[prepare_folder_annual_irradiance, annual_irradiance_raytracing],
+        sub_paths={
+            'dist_info': '_redist_info.json'
+        }
+    )
+    def restructure_direct_results(
+        self, input_folder='initial_results/final/direct',
+        extension='ill',
+        dist_info=prepare_folder_annual_irradiance._outputs.resources
+    ):
+        return [
+            {
+                'from': MergeFolderData()._outputs.output_folder,
+                'to': 'results/__static_apertures__/default/direct'
+            }
+        ]
+
+    @task(
+        template=AnnualIrradiancePostprocess,
+        needs=[restructure_total_results, restructure_direct_results]
+    )
+    def postprocess_annual_irradiance(
+        self, input_folder='results'
+    ):
+        return [
             {
                 'from': AnnualIrradiancePostprocess()._outputs.metrics,
                 'to': 'metrics'
@@ -179,15 +205,9 @@ class AnnualIrradianceEntryPoint(DAG):
         ]
 
     results = Outputs.folder(
-        source='results/total', description='Folder with raw result files (.ill) that '
+        source='results', description='Folder with raw result files (.ill) that '
         'contain matrices of irradiance in W/m2 for each time step of the Wea '
-        'time period.', alias=total_radiation_results
-    )
-
-    results_direct = Outputs.folder(
-        source='results/direct', description='Folder with raw result files (.ill) that '
-        'contain matrices for just the direct irradiance.',
-        alias=direct_radiation_results
+        'time period.'
     )
 
     average_irradiance = Outputs.folder(

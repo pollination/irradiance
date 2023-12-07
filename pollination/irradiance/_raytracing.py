@@ -4,8 +4,7 @@ from dataclasses import dataclass
 
 from pollination.honeybee_radiance.contrib import DaylightContribution
 from pollination.honeybee_radiance.coefficient import DaylightCoefficient
-from pollination.honeybee_radiance.sky import AddRemoveSkyMatrix
-from pollination.path.copy import CopyFile
+from pollination.honeybee_radiance_postprocess.two_phase import AddRemoveSkyMatrix
 
 @dataclass
 class AnnualIrradianceRayTracing(DAG):
@@ -69,7 +68,7 @@ class AnnualIrradianceRayTracing(DAG):
         modifiers=sun_modifiers,
         sensor_grid=sensor_grid,
         conversion='0.265 0.670 0.065',
-        output_format='a',  # make it ascii so we expose the file as a separate output
+        output_format='f',
         scene_file=octree_file_with_suns,
         bsdf_folder=bsdfs
     ):
@@ -77,15 +76,6 @@ class AnnualIrradianceRayTracing(DAG):
             {
                 'from': DaylightContribution()._outputs.result_file,
                 'to': 'direct_sun.ill'
-            }
-        ]
-
-    @task(template=CopyFile, needs=[direct_sun])
-    def copy_direct_sun(self, name=grid_name, src=direct_sun._outputs.result_file):
-        return [
-            {
-                'from': CopyFile()._outputs.dst,
-                'to': '../final/direct/{{self.name}}.ill'
             }
         ]
 
@@ -98,7 +88,7 @@ class AnnualIrradianceRayTracing(DAG):
         sky_matrix=sky_matrix_direct,
         sky_dome=sky_dome,
         sensor_grid=sensor_grid,
-        conversion='0.265 0.670 0.065',  # divide by 179
+        conversion='0.265 0.670 0.065',
         scene_file=octree_file,
         bsdf_folder=bsdfs
     ):
@@ -118,7 +108,7 @@ class AnnualIrradianceRayTracing(DAG):
         sky_matrix=sky_matrix,
         sky_dome=sky_dome,
         sensor_grid=sensor_grid,
-        conversion='0.265 0.670 0.065',  # divide by 179
+        conversion='0.265 0.670 0.065',
         scene_file=octree_file,
         bsdf_folder=bsdfs
     ):
@@ -142,7 +132,11 @@ class AnnualIrradianceRayTracing(DAG):
     ):
         return [
             {
-                'from': AddRemoveSkyMatrix()._outputs.results_file,
+                'from': AddRemoveSkyMatrix()._outputs.total,
                 'to': '../final/total/{{self.name}}.ill'
+            },
+            {
+                'from': AddRemoveSkyMatrix()._outputs.direct,
+                'to': '../final/direct/{{self.name}}.ill'
             }
         ]
