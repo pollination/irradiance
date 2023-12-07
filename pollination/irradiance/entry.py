@@ -197,14 +197,23 @@ class AnnualIrradianceEntryPoint(DAG):
         needs=[restructure_total_results, restructure_direct_results]
     )
     def postprocess_annual_irradiance(
-        self, input_folder='results'
+        self, input_folder='results', model=model
     ):
         return [
             {
                 'from': AnnualIrradiancePostprocess()._outputs.metrics,
                 'to': 'metrics'
+            },
+            {
+                'from': AnnualIrradiancePostprocess()._outputs.visualization,
+                'to': 'visualization.vsf'
             }
         ]
+
+    visualization = Outputs.file(
+        source='visualization.vsf',
+        description='Result visualization in VisualizationSet format.'
+    )
 
     results = Outputs.folder(
         source='results', description='Folder with raw result files (.ill) that '
