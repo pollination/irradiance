@@ -1,6 +1,6 @@
-from .entry import AnnualIrradianceEntryPoint
+from .entry import SkyIrradianceEntryPoint
 
 
 __pollination__ = {
-    'entry_point': AnnualIrradianceEntryPoint
+    'entry_point': SkyIrradianceEntryPoint
 }
