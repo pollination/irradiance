@@ -1,32 +1,26 @@
-"""Ray tracing DAG for annual irradiance."""
+"""Raytracing DAG for annual sky radiation."""
 from pollination_dsl.dag import Inputs, DAG, task
 from dataclasses import dataclass
 
-from pollination.honeybee_radiance.contrib import DaylightContribution
 from pollination.honeybee_radiance.coefficient import DaylightCoefficient
-from pollination.honeybee_radiance_postprocess.two_phase import TwoPhaseAddRemoveSkyMatrix
+
 
 @dataclass
-class AnnualIrradianceRayTracing(DAG):
+class SkyIrradianceRayTracing(DAG):
     # inputs
+    name = Inputs.str(
+        description='Sensor grid file name. This is useful to rename the final result '
+        'file to {name}.res'
+    )
+
     radiance_parameters = Inputs.str(
         description='The radiance parameters for ray tracing',
-        default='-ab 2'
+        default='-ab 2 -ad 5000 -lw 2e-05'
     )
 
-    octree_file_with_suns = Inputs.file(
-        description='A Radiance octree file with suns.',
+    scene_file = Inputs.file(
+        description='A Radiance octree file without suns or sky.',
         extensions=['oct']
-    )
-
-    octree_file = Inputs.file(
-        description='A Radiance octree file.',
-        extensions=['oct']
-    )
-
-    grid_name = Inputs.str(
-        description='Sensor grid file name. This is useful to rename the final result '
-        'file to {grid_name}.ill'
     )
 
     sensor_grid = Inputs.file(
@@ -38,105 +32,39 @@ class AnnualIrradianceRayTracing(DAG):
         description='Number of sensors in the input sensor grid.'
     )
 
-    sun_modifiers = Inputs.file(
-        description='A file with sun modifiers.'
-    )
-
     sky_matrix = Inputs.file(
-        description='Path to total sky matrix file.'
-    )
-
-    sky_matrix_direct = Inputs.file(
-        description='Path to direct skymtx file (gendaymtx -d).'
+        description='Path to skymtx file.'
     )
 
     sky_dome = Inputs.file(
         description='Path to sky dome file.'
     )
 
-    bsdfs = Inputs.folder(
-        description='Folder containing any BSDF files needed for ray tracing.',
-        optional=True
+    order_by = Inputs.str(
+        description='Order of the output results. By default the results are ordered '
+        'to include the results for a single sensor in each row.', default='sensor',
+        spec={'type': 'string', 'enum': ['sensor', 'datetime']}
     )
 
-    @task(template=DaylightContribution)
-    def direct_sun(
-        self,
-        radiance_parameters=radiance_parameters,
-        fixed_radiance_parameters='-aa 0.0 -I -ab 0 -dc 1.0 -dt 0.0 -dj 0.0',
-        sensor_count=sensor_count,
-        modifiers=sun_modifiers,
-        sensor_grid=sensor_grid,
-        conversion='0.265 0.670 0.065',
-        output_format='f',
-        scene_file=octree_file_with_suns,
-        bsdf_folder=bsdfs
-    ):
-        return [
-            {
-                'from': DaylightContribution()._outputs.result_file,
-                'to': 'direct_sun.ill'
-            }
-        ]
-
-    @task(template=DaylightCoefficient)
-    def direct_sky(
-        self,
-        radiance_parameters=radiance_parameters,
-        fixed_radiance_parameters='-aa 0.0 -I -ab 1 -c 1 -faf',
-        sensor_count=sensor_count,
-        sky_matrix=sky_matrix_direct,
-        sky_dome=sky_dome,
-        sensor_grid=sensor_grid,
-        conversion='0.265 0.670 0.065',
-        scene_file=octree_file,
-        bsdf_folder=bsdfs
-    ):
-        return [
-            {
-                'from': DaylightCoefficient()._outputs.result_file,
-                'to': 'direct_sky.ill'
-            }
-        ]
-
+    # TODO: add a step to set divide_by to 1/timestep if sky is cumulative.
     @task(template=DaylightCoefficient)
     def total_sky(
         self,
+        name=name,
         radiance_parameters=radiance_parameters,
-        fixed_radiance_parameters='-aa 0.0 -I -c 1 -faf',
+        fixed_radiance_parameters='-aa 0.0 -I -c 1',
         sensor_count=sensor_count,
         sky_matrix=sky_matrix,
         sky_dome=sky_dome,
         sensor_grid=sensor_grid,
-        conversion='0.265 0.670 0.065',
-        scene_file=octree_file,
-        bsdf_folder=bsdfs
-    ):
+        conversion='0.265 0.670 0.065',  # divide by 179
+        scene_file=scene_file,
+        output_format='a',
+        order_by=order_by
+            ):
         return [
             {
                 'from': DaylightCoefficient()._outputs.result_file,
-                'to': 'total_sky.ill'
-            }
-        ]
-
-    @task(
-        template=TwoPhaseAddRemoveSkyMatrix,
-        needs=[direct_sun, total_sky, direct_sky]
-    )
-    def output_matrix_math(
-        self,
-        name=grid_name,
-        direct_sky_matrix=direct_sky._outputs.result_file,
-        total_sky_matrix=total_sky._outputs.result_file,
-        sunlight_matrix=direct_sun._outputs.result_file,
-    ):
-        return [
-            {
-                'from': TwoPhaseAddRemoveSkyMatrix()._outputs.total,
-                'to': '../final/total/{{self.name}}.ill'
-            },
-            {
-                'from': TwoPhaseAddRemoveSkyMatrix()._outputs.direct,
-                'to': '../final/direct/{{self.name}}.ill'
+                'to': '../final/{{self.name}}.ill'
             }
         ]
