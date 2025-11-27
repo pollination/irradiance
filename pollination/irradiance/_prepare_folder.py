@@ -207,7 +207,7 @@ class AnnualIrradiancePrepareFolder(GroupedDAG):
         ]
 
     @task(template=StudyInfo)
-    def create_study_info(self, wea=wea, timestep=timestep):
+    def create_study_info(self, wea=wea, timestep=timestep, study_type='annual-irradiance'):
         return [
             {
                 'from': StudyInfo()._outputs.study_info,
