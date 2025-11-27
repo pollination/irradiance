@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import sys
 import setuptools
+import os
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -14,13 +14,7 @@ with open('extras-requirements.txt') as f:
     extras_requirements = [req.replace('==', '>=') for req in extras_requirements]
 
 
-# read branch input and remove it from sys.argv
-if '--branch' in sys.argv:
-    index = sys.argv.index('--branch')
-    sys.argv.pop(index)
-    branch = sys.argv.pop(index)
-else:
-    branch = 'master'
+branch = os.getenv('BRANCH', 'master')
 
 name = 'pollination-irradiance'
 if branch == 'viz':
